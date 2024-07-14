@@ -1,0 +1,49 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+    ">
+<camelContext id="camel" xmlns="http://camel.apache.org/schema/spring" >
+    <route id="tcpServer">
+        <from uri="netty:tcp://0.0.0.0:8080?sync=true&amp;encoders=#fixedLengthEncoder&amp;decoders=#fixedLengthDecoder"/>
+        <onException>
+            <exception>java.net.SocketTimeoutException</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <to uri="log:timeout?level=ERROR"/>
+            <transform>
+                <constant>Timeout occurred</constant>
+            </transform>
+        </onException>
+        <process ref="fixedLengthProcessor"/>
+        <to uri="log:received?showAll=true"/>
+        <transform>
+            <simple>Hello, ${body}</simple>
+        </transform>
+    </route>
+    <!--
+    <route id="tcpClient">
+        <from uri="timer:foo?period=5000"/>
+        <setBody>
+            <simple>0009Hello</simple>
+        </setBody>
+        <doTry>
+            <to uri="netty:tcp://localhost:8080?sync=true&amp;encoders=#fixedLengthEncoder&amp;decoders=#fixedLengthDecoder&amp;requestTimeout=30000"/>
+            <to uri="log:received?showAll=true"/>
+            <doCatch>
+                <exception>java.net.SocketTimeoutException</exception>
+
+                <to uri="log:timeout?level=ERROR"/>
+                <transform>
+                    <constant>Timeout occurred</constant>
+                </transform>
+            </doCatch>
+        </doTry>
+    </route>
+    -->
+</camelContext>
+
+</beans>

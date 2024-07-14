@@ -1,0 +1,22 @@
+<routes xmlns="http://camel.apache.org/schema/spring"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <route id="tcpServer">
+        <from uri="netty:tcp://0.0.0.0:8080?sync=true&amp;encoders=#fixedLengthEncoder&amp;decoders=#fixedLengthDecoder"/>
+        <onException>
+            <exception>java.net.SocketTimeoutException</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <to uri="log:timeout?level=ERROR"/>
+            <transform>
+                <constant>Timeout occurred</constant>
+            </transform>
+        </onException>
+        <process ref="fixedLengthProcessor"/>
+        <to uri="log:received?showAll=true"/>
+        <transform>
+            <simple>Hello, ${body}</simple>
+        </transform>
+    </route>
+</routes>
